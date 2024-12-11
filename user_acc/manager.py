@@ -1,9 +1,10 @@
 from django.contrib.auth.models import BaseUserManager
 from django.utils import timezone
 from django.db import models
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Prefetch
 from django.utils.translation import gettext_lazy as _
 from typing import Optional, List, Dict, Any
+from functools import lru_cache
 
 class CustomUserManager(BaseUserManager):
     """
@@ -79,7 +80,8 @@ class CustomUserQueryManager:
     """Advanced query manager for CustomUser with comprehensive filtering and analysis method"""
     
     @classmethod
-    def get_active_users(Cls, days: int = 30)->models.QuerySet:
+    @lru_cache(maxsize=128)
+    def get_active_users(cls, days: int = 30)->models.QuerySet:
         """
         Retrieve  all users who have login within specified number of days 
 
@@ -98,7 +100,7 @@ class CustomUserQueryManager:
         
     @classmethod
     def get_users_by_registration_period(
-        Cls,
+        cls,
         start_date : Optional[timezone.datetime] = None,
         end_date: Optional[timezone.datetime] = None,
     )->models.QuerySet:
@@ -123,7 +125,7 @@ class CustomUserQueryManager:
         return CustomUser.objects.filter(query)
         
     @classmethod
-    def get_user_engagement_stats(Cls)->Dict[str, Any]:
+    def get_user_engagement_stats(cls)->Dict[str, Any]:
         """Compute user engagement statics 
 
         Args:
@@ -134,16 +136,20 @@ class CustomUserQueryManager:
         """
         return {
             'total_users': CustomUser.objects.count(),
-            'active_users': Cls.get_active_users().count(),
+            'active_users': cls.get_active_users().count(),
             'verified_users': CustomUser.objects.filter(is_verified=True).count(),
             'average_login_attempts': CustomUser.objects.aggregate(
                 avg_attempts = Avg('failed_login_attempts')
             )['avg_attempts'],
             'language_distribution': list(
-                CustomUser.objects.values('language_preferences').annotate(count= Count('id')).orderby("-count")
+                CustomUser.objects.values('language_preferences')\
+                    .annotate(count= Count('id'))\
+                    .orderby("-count")
             ),
             'theme_preferences': list(
-                CustomUser.objects.values('theme_preference').annotate(count=Count('id')).orderby('-count')
+                CustomUser.objects.values('theme_preference')\
+                    .annotate(count=Count('id'))\
+                    .orderby('-count')
                 
             ),
             
@@ -151,7 +157,7 @@ class CustomUserQueryManager:
         
     @classmethod
     def search_users(
-            Cls,
+            cls,
             query: str,
             search_fields: Optional[List[str]] = None
         )->models.QuerySet:
@@ -165,9 +171,8 @@ class CustomUserQueryManager:
         Returns:
             models.QuerySet: Queryset of the matching users 
         """
-        if not search_fields:
-            search_fields = ['email', 'username', 'fullname']
-            
+        search_fields = search_fields or ['email', 'username', 'fullname']
+        
         #Q-objects of each search_fields
         search_query = Q()
         for field in search_fields:
@@ -177,7 +182,7 @@ class CustomUserQueryManager:
         return CustomUser.objects.filter(search_query)
     
     @classmethod
-    def get_locked_accounts(Cls)->models.QuerySet:
+    def get_locked_accounts(cls)->models.QuerySet:
         """get all the locked account
 
         Args:
@@ -193,7 +198,7 @@ class CustomUserQueryManager:
         
     @classmethod
     def get_users_by_age_group(
-        Cls,
+        cls,
         min_age: Optional[int] = None,
         max_age: Optional[int] = None,
     )->models.QuerySet:
