@@ -84,6 +84,7 @@ TEMPLATES = [
 
 # starndard authentication mechanism 
 AUTHENTICATION_BACKENDS = [
+    'user_acc.backends.EmailAuthBackends',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
