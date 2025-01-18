@@ -23,7 +23,7 @@ class CustomUserCreationForm(UserCreationForm):
            return email
         
     def clean(self):
-        """this perform cross fileds validatio"""
+        """this perform cross fileds validation"""
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
         username = cleaned_data.get('username')
@@ -76,4 +76,4 @@ class CustomAuthenticationForm(forms.Form):
     def get_user(self):
         """Retriving the authenticated user"""
         return self.user
-        
+    
