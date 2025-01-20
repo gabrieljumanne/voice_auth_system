@@ -2,7 +2,8 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
-from django.contrib.auth.views import LoginView
+from django.contrib.auth import logout
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
@@ -16,12 +17,11 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 
 @method_decorator(sensitive_post_parameters(), name='post')
-@method_decorator(never_cache, name='dispatch')
 class UserRegistrationView(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'account/signup.html'
     success_url = reverse_lazy('login')
-
+    @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
         # Redirect logged-in users
         if request.user.is_authenticated:
@@ -186,3 +186,59 @@ class UserLogInView(LoginView):
         ):
             return redirect_to
         return '/home/'
+    
+
+class UserLogOutView(LogoutView):
+    template_name = 'account/logout.html'
+    next_page = 'login'
+    
+    @method_decorator(never_cache)
+    @method_decorator(csrf_protect)
+    def dispatch(self, request, *args, **kwargs):
+        
+        if request.method != 'POST': 
+            messages.warning(
+                self.request, 
+                _("Please can use the logout button to logout")
+            )
+            return redirect('home')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        """processing the logout(session cleaning) and redirect the user mechanism"""
+        
+        # get the username 
+        username = request.user.get_short_name() or request.user.username
+        
+        #cleaning the session sensitive data 
+        for key in list(request.session.keys()):
+            if key.startswith('sensitive_'):
+                del request.session[key]
+        
+        # logout the user
+        response = super().post(request, *args, **kwargs)
+
+        messages.success(
+            self.request, 
+            _(f"Goodbye, {username}! , You are successfully logged out")
+        )
+        
+        # clear all session data 
+        request.session.flush()
+        
+        return response 
+    
+    def get_next_page(self):
+        """Returns the url of the nextpage to redirect after the logout
+        """
+        next_page = self.request.POST.get('next') or self.request.GET.get('next')
+        
+        # validity check for the next page 
+        if next_page and url_has_allowed_host_and_scheme(
+            allowed_hosts={self.request.get_host()},
+            require_https= self.request.is_secure()
+        ):
+            return next_page
+        
+        return super().get_next_page()
