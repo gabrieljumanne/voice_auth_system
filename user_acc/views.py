@@ -5,7 +5,7 @@ from django.views.generic.edit import CreateView
 from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
@@ -20,7 +20,7 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 class UserRegistrationView(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'account/signup.html'
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('user_acc:login')
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
         # Redirect logged-in users
@@ -242,3 +242,6 @@ class UserLogOutView(LogoutView):
             return next_page
         
         return super().get_next_page()
+    
+def my_view(request):
+    return HttpResponse("Hello world ")
