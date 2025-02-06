@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 CustomUser = get_user_model()
 
+# signal loaded
+print("signal file has loaded")
+
 @receiver(post_save, sender=CustomUser)
 def handle_new_user_creation(sender, instance, created, **kwargs):
     """
@@ -21,19 +24,24 @@ def handle_new_user_creation(sender, instance, created, **kwargs):
     - Could trigger initial profile creation
     - Logs user creation event
     """
+    #point 2
+    print(f"signal loaded for user : {instance.email}")
     if created:
         # Send welcome email
+        print(f"New user created: {instance.email}") # point 3 when new user created 
         try:
-            send_mail(
+            result =send_mail(
                 'Welcome to Our Platform',
-                f'Hi {instance.full_name},\n\n'
+                f'Hi {instance.fullname},\n\n'
                 'Thank you for registering! '
                 'We\'re excited to have you join our community.',
                 settings.DEFAULT_FROM_EMAIL,
                 [instance.email],
-                fail_silently=True,
+                fail_silently=False,
             )
+            print(f"Email sent successfully: {result}")  # Debug print point 4
         except Exception as e:
+            print(f"Email error: {str(e)}")  # Debug print point 5
             logger.error(
               f"Failed to send welcome email to {instance.email}:{str(e)}" ,
               extra={
@@ -56,6 +64,8 @@ def handle_account_status_changes(sender, instance, **kwargs):
     if not instance.pk:
         return
     #loading the older instance with instance.pk
+    #Debug point 1 
+    print(f"{instance.pk} : is loaded for status check ..")
     with contextlib.suppress(CustomUser.DoesNotExist):
         old_instance = CustomUser.objects.get(pk=instance.pk)
 
@@ -69,14 +79,15 @@ def handle_account_status_changes(sender, instance, **kwargs):
 
             # Optional: Send security alert
             try:
-                send_mail(
+                result = send_mail(
                     'Security Alert: Multiple Login Attempts',
                     'Multiple failed login attempts have been detected on your account. '
                     'If this was not you, please reset your password or contact support.',
                     settings.DEFAULT_FROM_EMAIL,
                     [instance.email],
-                    fail_silently=True,
+                    fail_silently=False,
                 )
+                print(f"alret email sent succefully {result}")
             except Exception as e:
                 logger.error(
                     f"Security alert email failed to  {instance.email}:{str(e)}" ,
@@ -97,7 +108,7 @@ def handle_account_status_changes(sender, instance, **kwargs):
 def normalize_user_data(sender, instance, **kwargs):
     """
     Normalize and validate user data before saving.
-    
+    python -m aiosmtpd -n -l localhost:1025
     This signal handler:
     - Ensures consistent data formatting
     - Performs additional validation

@@ -1,0 +1,159 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Optional: Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo or Site Name -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'user_acc:home' %}" class="text-2xl font-bold text-blue-600">Auth-system</a>
+                    </div>
+                </div>
+                
+                <!-- User Navigation -->
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                    <div class="relative group">
+                        <button class="flex items-center text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            {{ user.username }}
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div class="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out origin-top-right">
+                        <div class="py-1 rounded-md border border-gray-100">
+                            <div class="py-1">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>
+                                    Profile
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-cog mr-2"></i>
+                                    Account Settings
+                                </a>
+                                <a href="#" onclick="logoutUser()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>
+                                    Log out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                        <div class="space-x-4">
+                            <a href="#"  onclick="navigateTo('{% url 'user_acc:login' %}')"  class="text-blue-600 hover:text-blue-800">Login</a>
+                            <a href="#" onclick="navigateTo('{% url 'user_acc:registration'%}')"  class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Sign Up</a>
+                        </div>
+                    {% endif %} 
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if user.is_authenticated %}
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h1 class="text-3xl font-bold mb-6 text-gray-800">Welcome, {{ user.first_name|default:user.username }}!</h1>
+                
+                <!-- Dashboard Quick Access -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4">Account Overview</h2>
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Joined:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+                        <ul class="space-y-2">
+                            <li>
+                                <a href="" class="text-green-600 hover:underline">
+                                    <i class="fas fa-user mr-2"></i>Edit Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a href="" class="text-green-600 hover:underline">
+                                    <i class="fas fa-lock mr-2"></i>Change Password
+                                </a>
+                            </li>
+                            <li>
+                                <form id="logout-form" action="{% url 'user_acc:logout' %}" method="POST" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-green-600 hover:underline bg-transparent border-none cursor-pointer">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4">Additional Features</h2>
+                        <p class="text-gray-600">Placeholder for site-specific features or recent activity.</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Content for non-authenticated users -->
+            <div class="text-center py-16">
+                <h1 class="text-4xl font-bold mb-6 text-gray-800">Welcome to Auth-system</h1>
+                <p class="text-xl text-gray-600 mb-8">Join us to unlock full features and personalized experience!</p>
+                <div class="space-x-4">
+                    <a href="#"onclick=navigateTo("{% url 'user_acc:login' %}") class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition">
+                        Login
+                    </a>
+                    <a href="#"onclick=navigateTo("{% url 'user_acc:registration' %}") class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition">
+                        Sign Up
+                    </a>
+                    
+                </div>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        function navigateTo(url){
+            window.location.href = url;
+        }
+
+        function logoutUser(){
+            fetch("{% url 'user_acc:logout' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: ""
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = "{% url 'user_acc:home' %}";
+                } else {
+                    alert("Logout failed. Please try again.");
+                }
+            }).catch(error => {
+                console.error("Error:", error);
+                alert("Logout failed. Please try again.");
+            }); 
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-8 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-600">&copy; {% now "Y" %} YourSiteName. All Rights Reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

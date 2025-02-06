@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'crispy_tailwind',
     
     # Custom apps
-    'user_acc',
+    'user_acc.apps.AccountsConfig',
     'voice_recognition',
 ]
 
@@ -82,17 +82,20 @@ TEMPLATES = [
     },
 ]
 
+# settings.py
+AUTH_USER_MODEL = 'user_acc.CustomUser'  
+
 # starndard authentication mechanism 
 AUTHENTICATION_BACKENDS = [
-    'user_acc.backends.EmailAuthBackends',
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    'user_acc.backends.EmailAuthBackend',
+    #'django.contrib.auth.backends.ModelBackend',
+    #'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 #voice authentication ...custom backend 
-AUTHENTICATION_BACKENDS += [
+"""AUTHENTICATION_BACKENDS += [
     'voice_recognition.backends.VoiceAuthenticationBackend',
-]
+]"""
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
@@ -144,7 +147,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR/'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = []
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -224,12 +227,15 @@ LOGGING = {
 import os
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER') 
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') 
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') 
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER') 
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') 
+# DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL') 
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD ='' 
+DEFAULT_FROM_EMAIL = 'iamcastorosa098@gmail.com' 
 
 #LOGOUT_REDIRECT_URL = '/login/'
  

@@ -1,13 +1,13 @@
 from django import forms 
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate
 from .models import CustomUser
+from .backends import EmailAuthBackend
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ("fullname",'username', 'email', 'password1', 'password2')
     
     def clean_email(self):
        if email := self.cleaned_data.get('email'):
@@ -33,6 +33,8 @@ class CustomUserCreationForm(UserCreationForm):
         
         return cleaned_data
         
+
+        
 class CustomAuthenticationForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(
@@ -53,22 +55,23 @@ class CustomAuthenticationForm(forms.Form):
     
     # store the request and user in CustAuthForm 
     def __init__(self, request=None, *args, **kwargs):
-        self.request = request,
+        self.request = request
         self.user = None
         super().__init__(*args, **kwargs)
         
     
-    def claen(self):
+    def clean(self):
         """validate email and password and authenticate the user"""
-        cleaned_data = super().clean() # all validation are done here .....
+        cleaned_data = super().clean() 
         email = cleaned_data.get('email')
         password = cleaned_data.get('password')
         
         if email and password:
-            user = authenticate(email=email, password=password)
-            if not user:
+            backend = EmailAuthBackend()
+            self.user = backend.authenticate(request=self.request,email=email, password=password)
+            if not self.user:
                 raise ValidationError("Invaild email or password")
-            elif not user.is_active:
+            elif not self.user.is_active:
                 raise ValidationError("This account is inactive ")
         
         return cleaned_data
@@ -76,4 +79,6 @@ class CustomAuthenticationForm(forms.Form):
     def get_user(self):
         """Retriving the authenticated user"""
         return self.user
+    
+        
     

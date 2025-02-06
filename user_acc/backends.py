@@ -2,10 +2,11 @@ from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 from .models import CustomUser
 
+
 class EmailAuthBackend(BaseBackend):
     """Authenticate user using email and password  """
     
-    def authenitcate(self, request, email=None, password=None, **kwargs):
+    def authenticate(self, request, email=None, password=None, **kwargs):
         try: 
             #retriving the user by email and check the provided password 
             user = CustomUser.objects.get(email=email)

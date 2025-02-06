@@ -16,3 +16,5 @@ crispy-tailwind==0.5.0
 gunicorn==21.2.0
 whitenoise==6.6.0
 
+django-sendgrid-v5
+aiosmtpd

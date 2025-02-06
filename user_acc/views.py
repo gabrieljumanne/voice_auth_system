@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.views.generic import TemplateView
+from django.views.generic.edit import CreateView 
 from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
@@ -14,6 +15,11 @@ from django.views.decorators.debug import sensitive_post_parameters, sensitive_v
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from .models import UserActivity
+
 
 
 @method_decorator(sensitive_post_parameters(), name='post')
@@ -26,7 +32,7 @@ class UserRegistrationView(CreateView):
         # Redirect logged-in users
         if request.user.is_authenticated:
             messages.info(request, "You are already registered and logged in.")
-            return redirect('home')
+            return redirect(reverse_lazy('user_acc:home'))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -62,12 +68,13 @@ class UserLogInView(LoginView):
     template_name = 'account/login.html'
     redirect_authenticated_user = True
     
+    #security decorators 
     @method_decorator(sensitive_post_parameters())
     @method_decorator(never_cache)
     @method_decorator(csrf_protect)
     @method_decorator(sensitive_variables('password'))
     def dispatch(self, request, *args, **kwargs):
-        #redirect authenticated user
+        #check if the user is already login and redirects if .
         if self.redirect_authenticated_user and self.request.user.is_authenticated:
             redirect_to = self.get_success_url()
             if redirect_to == self.request.path:
@@ -93,7 +100,11 @@ class UserLogInView(LoginView):
     
     def form_valid(self, form):
         """handle valid form submission"""
-        #security checks before logs in 
+        
+        # login user after validation
+        auth_response = super().form_valid(form)
+        
+        #security checks after logs in 
         if not self.request.is_secure() and not settings.DEBUG:
             messages.warning(
                 self.request, 
@@ -101,7 +112,7 @@ class UserLogInView(LoginView):
                   "please consider using HTTPS."
                   )
             )
-        # user account validation on view
+       
         user = form.get_user()
         
         # account locking and unlocking mechanism 
@@ -131,13 +142,28 @@ class UserLogInView(LoginView):
         # reset failed login on succefully attempts
         if hasattr(user, "reset_failed_login_attempts"):
             user.reset_failed_login_attempts()
+        
+        # track the user activity after succefully login 
+        try:
+            UserActivity.objects.create(
+            user = user,
+            action = 'Logged In',
+            icon = "sign-in-alt"
+        )
+        except IntegrityError:
+            #log the error but dont stop the login process
+             messages.warning(
+            self.request,
+            _("Unable to track login activity, but login was successful.")
+        )
+        
             
         messages.success(
             self.request,
             _("Welcome back, {}!").format(user.get_short_name() or user.username)
         )
         
-        return super().form_valid(form)
+        return auth_response
         
 
     def form_invalid(self, form):
@@ -185,12 +211,12 @@ class UserLogInView(LoginView):
             require_https=self.request.is_secure(),
         ):
             return redirect_to
-        return '/home/'
+        return reverse_lazy('user_acc:home')
     
 
 class UserLogOutView(LogoutView):
-    template_name = 'account/logout.html'
-    next_page = 'login'
+    #template_name = 'account/home.html'
+    next_page = reverse_lazy("user_acc:home")
     
     @method_decorator(never_cache)
     @method_decorator(csrf_protect)
@@ -201,7 +227,7 @@ class UserLogOutView(LogoutView):
                 self.request, 
                 _("Please can use the logout button to logout")
             )
-            return redirect('home')
+            return redirect(reverse_lazy("user_acc:home"))
         
         return super().dispatch(request, *args, **kwargs)
     
@@ -243,5 +269,44 @@ class UserLogOutView(LogoutView):
         
         return super().get_next_page()
     
-def my_view(request):
-    return HttpResponse("Hello world ")
+
+class Password_reset_view():
+    pass
+
+
+
+class HomepageView(TemplateView):
+    """
+    Homepage view that requires user authentication
+    Renders the main dashboard/home page for logged-in users
+    """
+    template_name = 'account/home.html'
+    
+    def get_context_data(self, **kwargs):
+        """
+        Adds additional context data to the template
+        """
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Dashboard'
+        
+        # featch activities if the user is only authenticated 
+        if self.request.user.is_authenticated:
+            context['recent_activities'] = self.get_recent_activities()
+        
+        return context
+
+    def get_recent_activities(self):
+        """featch user recently activities"""
+        return  UserActivity.objects.filter(user=self.request.user).order_by('-timestamp')
+
+    def post(self, request, *args, **kwargs):
+        """
+        Optional: Handle any POST requests on the homepage
+        Useful for quick actions or form submissions
+        """
+        # Implement any POST handling logic here
+        return self.get(request, *args, **kwargs)
+    
+    
+def logpage(request):
+    return HttpResponse("trial page ")

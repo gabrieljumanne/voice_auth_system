@@ -6,4 +6,5 @@ class AccountsConfig(AppConfig):
     name = 'user_acc'
 
     def ready(self):
-        import user_acc.signal
+        print("AccountsConfig ready method called!")  # Debug print
+        import user_acc.signals

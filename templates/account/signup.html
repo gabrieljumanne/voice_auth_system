@@ -5,7 +5,7 @@
     {% load crispy_forms_tags %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registration</title>
+    <title>{{title}}</title>
     <!-- Include Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Include Crispy Forms CSS -->
@@ -14,11 +14,11 @@
 <body class="bg-gray-100 flex justify-center items-center min-h-screen py-6">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-4">
         <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">User Registration</h1>
-        <form method="post" class="space-y-4">
+        <form method="post" class="space-y-4"  autocomplete="off" >
             
-            
+            {% csrf_token %}
             <div class="crispy-tailwind">
-                {{ form|crispy }}
+                {{form | crispy}}
             </div>
 
             <div class="flex flex-col gap-4 mt-6">
@@ -31,6 +31,8 @@
                 </p>
             </div>
         </form>
+        
+      
     </div>
 </body>
 </html>

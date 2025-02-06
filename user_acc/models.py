@@ -22,7 +22,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         max_length=50,
         unique=True,
         validators=[RegexValidator(
-            regex=r'^[a-zA-Z0-9]+$',
+            regex=r'^[a-zA-Z0-9_]+$',
             message=_("Username must be alphanumeric or must contain underscore")
         ), ]
     )
@@ -330,3 +330,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         self.deleted_at = timezone.now()
         self.is_active = False
         self.save(update_fields=["deleted_at", "is_active"])
+        
+class UserActivity(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    icon = models.CharField(max_length=50)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.action}"
