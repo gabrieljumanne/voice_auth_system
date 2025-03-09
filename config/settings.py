@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     
     # Custom apps
     'user_acc.apps.AccountsConfig',
-    'voice_recognition',
+    
 ]
 
 MIDDLEWARE = [

@@ -3443,3 +3443,5 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'AnonymousUser' object has no attribute 'get_short_name'
 ERROR 2025-02-06 13:59:48,737 basehttp 5355 140052275398336 "POST /system/logout/ HTTP/1.1" 500 124816
+ERROR 2025-02-10 13:42:56,830 signals 5997 134060984764096 Failed to send welcome email to viviankamugisha123@gmail.com:[Errno 111] Connection refused
+ERROR 2025-03-03 11:45:58,316 signals 28710 137475076916928 Failed to send welcome email to johndoe6677@gmail.com:[Errno 111] Connection refused
